@@ -1,25 +1,20 @@
-// Base API configuration
-// Future: Replace with real REST/FHIR endpoints
-export const API_BASE_URL = '/api';
+import axios from 'axios';
 
-export const DEFAULT_HEADERS = {
-  'Content-Type': 'application/json',
-  // Future: 'Authorization': `Bearer ${token}`
-};
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:5000';
 
-// Simulate network delay for realistic UX
-export function simulateDelay(min = 300, max = 700): Promise<void> {
-  const delay = Math.floor(Math.random() * (max - min + 1)) + min;
-  return new Promise(resolve => setTimeout(resolve, delay));
+export const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 15000,
+});
+
+export async function mockApiCall<T>(
+  fallbackData: T,
+  _delay = 0,
+): Promise<T> {
+  return fallbackData;
 }
-
-// Generic API response wrapper
-export async function mockApiCall<T>(data: T): Promise<T> {
-  await simulateDelay();
-  return data;
-}
-
-// Error simulation (for development)
-export function shouldSimulateError(): boolean {
-  return false; // Set to true to test error states
-}
+export default api;

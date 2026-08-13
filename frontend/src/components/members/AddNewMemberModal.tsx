@@ -23,7 +23,12 @@ interface AddNewMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: NewMemberFormData) => Promise<void>;
-  communities?: Array<{ id: string; name: string }>;
+  communities?: Array<{
+  id?: string;
+  name?: string;
+  state?: string;
+  State?: string;
+}>;
   isLoading?: boolean;
 }
 
@@ -143,7 +148,12 @@ export const AddNewMemberModal: React.FC<AddNewMemberModalProps> = ({
     }
   };
 
-  const communityOptions = communities.map(c => ({
+  const communityOptions = communities
+  .filter(
+    (c): c is typeof c & { id: string; name: string } =>
+      Boolean(c.id && c.name),
+  )
+  .map(c => ({
     label: c.name,
     value: c.id,
   }));
@@ -203,7 +213,9 @@ export const AddNewMemberModal: React.FC<AddNewMemberModalProps> = ({
             <Select
               options={GENDERS}
               value={formData.gender}
-              onChange={(value) => handleInputChange('gender', value)}
+              onChange={(event) =>
+                handleInputChange('gender', event.target.value)
+              }
             />
           </div>
 
@@ -215,7 +227,9 @@ export const AddNewMemberModal: React.FC<AddNewMemberModalProps> = ({
             <Select
               options={RACE_OPTIONS}
               value={formData.race}
-              onChange={(value) => handleInputChange('race', value)}
+              onChange={(event) =>
+              handleInputChange('race', event.target.value)
+            }
             />
           </div>
 
@@ -320,7 +334,9 @@ export const AddNewMemberModal: React.FC<AddNewMemberModalProps> = ({
             <Select
               options={conditionOptions}
               value={formData.primaryCondition}
-              onChange={(value) => handleInputChange('primaryCondition', value)}
+              onChange={(event) =>
+                handleInputChange('primaryCondition', event.target.value)
+              }
             />
           </div>
 
@@ -332,7 +348,9 @@ export const AddNewMemberModal: React.FC<AddNewMemberModalProps> = ({
             <Select
               options={communityOptions}
               value={formData.communityId}
-              onChange={(value) => handleInputChange('communityId', value)}
+              onChange={(event) =>
+                  handleInputChange('communityId', event.target.value)
+                }
               error={errors.communityId}
             />
           </div>
