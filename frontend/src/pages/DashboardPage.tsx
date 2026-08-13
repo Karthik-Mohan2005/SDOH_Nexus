@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '../components/layout/PageContainer';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -11,16 +11,41 @@ import { RecentMembersTable } from '../components/dashboard/RecentMembersTable';
 import { InterventionSummaryWidget } from '../components/dashboard/InterventionSummaryWidget';
 import { Button } from '../components/common/Button';
 import { Download, ShieldCheck } from 'lucide-react';
-import { exportToCSV, membersToCSVData } from '../utils/csv';
-import { mockMembers } from '../data/members';
-import { KPI_DATA } from '../utils/constants';
+import { getDashboardAnalytics } from '../services/analyticsService';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
 
+  const [analytics, setAnalytics] = useState<{
+    totalMembers: number;
+    highRiskMembers: number;
+    mediumRiskMembers: number;
+    lowRiskMembers: number;
+    highRiskPercentage: number;
+    mediumRiskPercentage: number;
+    lowRiskPercentage: number;
+    averageRiskProbability: number;
+  } | null>(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const data = await getDashboardAnalytics();
+        setAnalytics(data);
+      } catch (error) {
+        console.error('Failed to load dashboard analytics:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDashboard();
+  }, []);
+
   const handleExport = () => {
-    const csvData = membersToCSVData(mockMembers as unknown as Record<string, unknown>[]);
-    exportToCSV(csvData, 'SDOH_Nexus_Population_Report');
+    navigate('/members');
   };
 
   return (
@@ -30,13 +55,19 @@ export const DashboardPage: React.FC = () => {
         subtitle="Population-level SDOH risk, health outcomes, and intervention opportunities."
         badge={
           <span className="hidden sm:inline-flex items-center gap-1 text-xs font-medium bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full border border-emerald-200">
-            <ShieldCheck className="h-3.5 w-3.5" /> Enriched Data Active
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Enriched Data Active
           </span>
         }
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" icon={<Download className="h-4 w-4" />} onClick={handleExport}>
-              Export Report
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<Download className="h-4 w-4" />}
+              onClick={handleExport}
+            >
+              View Members
             </Button>
           </div>
         }
@@ -45,14 +76,22 @@ export const DashboardPage: React.FC = () => {
       {/* Hero Summary Snapshot */}
       <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-blue-950 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-blue-400">Population Health Equity Snapshot</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-blue-400">
+            Population Health Equity Snapshot
+          </span>
+
           <h2 className="text-lg sm:text-xl font-bold mt-0.5">
-            10,250 Members Enriched Across 15 Communities
+            {isLoading
+              ? 'Loading population data...'
+              : `${analytics?.totalMembers.toLocaleString() ?? 0} Members Enriched Across 50 States`}
           </h2>
+
           <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
-            Member clinical health records combined with CDC Social Vulnerability Index (SVI), Census socioeconomic data, USDA food access metrics, and EPA environmental burden.
+            Live member clinical records enriched with socioeconomic,
+            environmental, food-access, and social vulnerability indicators.
           </p>
         </div>
+
         <Button
           variant="primary"
           size="sm"
@@ -63,67 +102,110 @@ export const DashboardPage: React.FC = () => {
         </Button>
       </div>
 
-      {/* KPI Cards Grid */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
         <KpiCard
           title="Total Members"
-          value={KPI_DATA.totalMembers.value}
-          trend={KPI_DATA.totalMembers.trend}
-          trendLabel="vs previous period"
+          value={
+            isLoading
+              ? '...'
+              : analytics?.totalMembers.toLocaleString() ?? '0'
+          }
+          trend={
+            isLoading
+              ? '...'
+              : `${((analytics?.averageRiskProbability ?? 0) * 100).toFixed(1)}%`
+          }
+          trendLabel="average risk probability"
           trendDirection="up"
           iconName="Users"
           onClick={() => navigate('/members')}
         />
+
         <KpiCard
           title="High-Risk Members"
-          value={KPI_DATA.highRiskMembers.value}
-          trend={KPI_DATA.highRiskMembers.trend}
-          trendLabel="vs previous period"
+          value={
+            isLoading
+              ? '...'
+              : analytics?.highRiskMembers.toLocaleString() ?? '0'
+          }
+          trend={
+            isLoading
+              ? '...'
+              : `${(analytics?.highRiskPercentage ?? 0).toFixed(1)}%`
+          }
+          trendLabel="of total population"
           trendDirection="down"
           iconName="AlertTriangle"
           onClick={() => navigate('/members')}
         />
+
         <KpiCard
-          title="High-Risk Communities"
-          value={KPI_DATA.highRiskCommunities.value}
-          trend={KPI_DATA.highRiskCommunities.trend}
-          trendLabel="this quarter"
+          title="Medium-Risk Members"
+          value={
+            isLoading
+              ? '...'
+              : analytics?.mediumRiskMembers.toLocaleString() ?? '0'
+          }
+          trend={
+            isLoading
+              ? '...'
+              : `${(analytics?.mediumRiskPercentage ?? 0).toFixed(1)}%`
+          }
+          trendLabel="of total population"
           trendDirection="up"
           iconName="MapPin"
-          onClick={() => navigate('/communities')}
+          onClick={() => navigate('/members')}
         />
+
         <KpiCard
-          title="Members with Actionable SDOH Risk"
-          value={KPI_DATA.actionableSDOH.value}
-          trend={KPI_DATA.actionableSDOH.trend}
-          trendLabel="vs previous period"
-          trendDirection="up"
+          title="Low-Risk Members"
+          value={
+            isLoading
+              ? '...'
+              : analytics?.lowRiskMembers.toLocaleString() ?? '0'
+          }
+          trend={
+            isLoading
+              ? '...'
+              : `${(analytics?.lowRiskPercentage ?? 0).toFixed(1)}%`
+          }
+          trendLabel="of total population"
+          trendDirection="down"
           iconName="HeartPulse"
-          onClick={() => navigate('/interventions')}
+          onClick={() => navigate('/members')}
         />
+
       </div>
 
-      {/* Chart Section 1: Donut & Line Chart */}
+      {/* Risk Distribution + Risk Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
-          <RiskDistributionChart onFilterRisk={() => {}} />
+          <RiskDistributionChart
+            onFilterRisk={(level) => {
+              navigate(`/members?risk=${level}`);
+            }}
+          />
         </div>
+
         <div className="lg:col-span-2">
           <RiskTrendChart />
         </div>
       </div>
 
-      {/* Chart Section 2: SDOH Domain Breakdown & Intervention Summary */}
+      {/* SDOH Factors + Intervention Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <SDOHFactorChart />
         </div>
+
         <div className="lg:col-span-1">
           <InterventionSummaryWidget />
         </div>
       </div>
 
-      {/* Table Section: Priority Communities & Recent Members */}
+      {/* Priority Communities + Recent Members */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PriorityCommunityTable />
         <RecentMembersTable />
