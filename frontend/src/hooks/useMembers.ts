@@ -8,23 +8,39 @@ import type { GetMembersOptions } from '../services/memberService';
 export function useMembers(
   initialFilters?: Partial<MemberFilters>,
   initialPage = 1,
-  initialPageSize = 10
+  initialPageSize = 10,
 ) {
   const [searchParams] = useSearchParams();
 
-  // Read risk filter from URL.
-  // Example:
-  // /members?risk=low
-  // /members?risk=medium
-  // /members?risk=high
   const urlRisk = searchParams.get('risk');
+  const normalizedRisk = urlRisk?.toLowerCase();
+
+  /*
+   * URL values:
+   *   low
+   *   medium
+   *   high
+   *
+   * Internal frontend values:
+   *   low
+   *   moderate
+   *   high
+   */
+  const urlRiskLevel: MemberFilters['riskLevel'] =
+    normalizedRisk === 'low'
+      ? 'low'
+      : normalizedRisk === 'medium' ||
+          normalizedRisk === 'moderate'
+        ? 'moderate'
+        : normalizedRisk === 'high'
+          ? 'high'
+          : 'all';
 
   const initialUrlFilters: Partial<MemberFilters> = {
     ...(initialFilters || {}),
-    ...(urlRisk &&
-    ['low', 'medium', 'high'].includes(urlRisk.toLowerCase())
+    ...(normalizedRisk
       ? {
-          riskLevel: urlRisk.toLowerCase() as MemberFilters['riskLevel'],
+          riskLevel: urlRiskLevel,
         }
       : {}),
   };
@@ -63,13 +79,13 @@ export function useMembers(
         setError(
           err instanceof Error
             ? err.message
-            : 'Failed to fetch members'
+            : 'Failed to fetch members',
         );
       } finally {
         setIsLoading(false);
       }
     },
-    [pagination.page, pagination.pageSize, filters]
+    [pagination.page, pagination.pageSize, filters],
   );
 
   useEffect(() => {
@@ -88,7 +104,7 @@ export function useMembers(
         page: 1,
       }));
     },
-    []
+    [],
   );
 
   const changePage = useCallback((newPage: number) => {

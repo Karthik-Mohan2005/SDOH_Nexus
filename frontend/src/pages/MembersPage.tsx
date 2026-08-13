@@ -19,23 +19,24 @@ import {
 import type { Community } from '../types/community';
 
 export const MembersPage: React.FC = () => {
-  const {
-    members,
-    pagination,
-    isLoading,
-    error,
-    filters,
-    updateFilters,
-    changePage,
-    changePageSize,
-    refetch,
-  } = useMembers();
+
+const {
+  members,
+  pagination,
+  isLoading,
+  error,
+  filters,
+  updateFilters,
+  changePage,
+  changePageSize,
+  refetch,
+} = useMembers();
 
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
-const [communities, setCommunities] = useState<Community[]>([]);
-const [isLoadingCommunities, setIsLoadingCommunities] = useState(false);
 
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [isLoadingCommunities, setIsLoadingCommunities] = useState(false);
 useEffect(() => {
   const loadCommunities = async () => {
     setIsLoadingCommunities(true);
