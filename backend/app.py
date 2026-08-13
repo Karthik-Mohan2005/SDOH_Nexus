@@ -3,7 +3,9 @@ from services.member_service import build_member_profile
 from services.data_service import (
     get_all_members,
     get_member_by_id,
-    get_dataset_info
+    get_dataset_info,
+    create_member,
+    update_member_risk
 )
 from services.community_service import (
     get_all_communities,
@@ -240,6 +242,85 @@ def api_get_members():
             'success': False,
             'error': str(e)
         }), 500
+
+@app.route('/api/members', methods=['POST'])
+def api_create_member():
+    try:
+        if model is None:
+            return jsonify({
+                'success': False,
+                'error': 'Model not loaded'
+            }), 503
+
+        data = request.get_json(silent=True)
+
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'Request body is required'
+            }), 400
+
+        new_member = create_member(data)
+
+        prediction_df = pd.DataFrame([new_member])
+
+        for feature in features:
+            if feature not in prediction_df.columns:
+                prediction_df[feature] = 0
+
+        X = prediction_df[features].copy()
+
+        for col in categorical_cols:
+            if col in X.columns:
+                X[col] = X[col].astype(str)
+
+        risk_probability = float(
+            model.predict_proba(X)[0][1]
+        )
+
+        risk_cat = risk_category(
+            risk_probability
+        )
+        updated_member = update_member_risk(
+            new_member['Patient_ID'],
+            risk_probability,
+            risk_cat
+        )
+
+        logger.info(
+            "Created member %s with risk probability %.6f (%s)",
+            new_member['Patient_ID'],
+            risk_probability,
+            risk_cat
+        )
+
+        return jsonify({
+            'success': True,
+            'message': 'Member created successfully',
+            'data': updated_member
+        }), 201
+
+    except ValueError as e:
+        logger.warning(
+            "Member creation validation error: %s",
+            str(e)
+        )
+
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 400
+
+    except Exception as e:
+        logger.exception(
+            "Failed to create member"
+        )
+
+        return jsonify({
+            'success': False,
+            'error': f'Failed to create member: {str(e)}'
+        }), 500
+
 
 @app.route('/api/members/<member_id>', methods=['GET'])
 def api_get_member(member_id):

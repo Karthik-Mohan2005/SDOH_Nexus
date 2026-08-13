@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PageContainer } from '../components/layout/PageContainer';
 import { PageHeader } from '../components/layout/PageHeader';
 import { MemberFilters } from '../components/members/MemberFilters';
 import { MemberTable } from '../components/members/MemberTable';
 import { AddNewMemberModal, type NewMemberFormData } from '../components/members/AddNewMemberModal';
 import { useMembers } from '../hooks/useMembers';
+import { createMember } from '../services/memberService';
 import { SkeletonTableRow } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
 import { Button } from '../components/common/Button';
 import { Download, UserPlus } from 'lucide-react';
 import { exportToCSV, membersToCSVData } from '../utils/csv';
-import { mockCommunities } from '../data/communities';
+import {
+  getCommunities,
+} from '../services/communityService';
+
+import type { Community } from '../types/community';
 
 export const MembersPage: React.FC = () => {
   const {
@@ -28,7 +33,25 @@ export const MembersPage: React.FC = () => {
 
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
+const [communities, setCommunities] = useState<Community[]>([]);
+const [isLoadingCommunities, setIsLoadingCommunities] = useState(false);
 
+useEffect(() => {
+  const loadCommunities = async () => {
+    setIsLoadingCommunities(true);
+
+    try {
+      const response = await getCommunities();
+      setCommunities(response.data);
+    } catch (error) {
+      console.error('Failed to load communities:', error);
+    } finally {
+      setIsLoadingCommunities(false);
+    }
+  };
+
+  loadCommunities();
+}, []);
   const handleResetFilters = () => {
     updateFilters({
       search: '',
@@ -45,26 +68,23 @@ export const MembersPage: React.FC = () => {
   };
 
   const handleAddMember = async (formData: NewMemberFormData) => {
-    setIsAddingMember(true);
-    try {
-      // In a real app, this would call an API to save the member
-      // For now, we'll simulate the API call
-      console.log('New member data:', formData);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Refresh the members list
-      refetch();
-      setIsAddMemberModalOpen(false);
-    } catch (error) {
-      console.error('Error adding member:', error);
-      throw error;
-    } finally {
-      setIsAddingMember(false);
-    }
-  };
+  setIsAddingMember(true);
 
+  try {
+    await createMember(formData);
+
+    // Reload members from the real backend.
+    await refetch();
+
+    setIsAddMemberModalOpen(false);
+  } catch (error) {
+    console.error('Error adding member:', error);
+
+    throw error;
+  } finally {
+    setIsAddingMember(false);
+  }
+};
   return (
     <PageContainer>
       <PageHeader
@@ -93,12 +113,12 @@ export const MembersPage: React.FC = () => {
 
       {/* Add New Member Modal */}
       <AddNewMemberModal
-        isOpen={isAddMemberModalOpen}
-        onClose={() => setIsAddMemberModalOpen(false)}
-        onSubmit={handleAddMember}
-        communities={mockCommunities}
-        isLoading={isAddingMember}
-      />
+  isOpen={isAddMemberModalOpen}
+  onClose={() => setIsAddMemberModalOpen(false)}
+  onSubmit={handleAddMember}
+  communities={communities}
+  isLoading={isAddingMember || isLoadingCommunities}
+/>
 
       {/* Filter Controls */}
       <MemberFilters

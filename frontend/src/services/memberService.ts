@@ -348,6 +348,31 @@ export async function getMembers(
     },
   };
 }
+export async function createMember(
+  memberData: {
+    age: number;
+    gender: 'Male' | 'Female' | 'Other';
+    race: string;
+    bmi: number;
+    systolicBp: number;
+    diastolicBp: number;
+    inpatientVisits: number;
+    urgentCareVisits: number;
+    standardFips: string;
+    primaryCondition: string;
+    communityId: string;
+  },
+): Promise<ApiResponse<BackendMember>> {
+  const response = await api.post<{
+    success: boolean;
+    message: string;
+    data: BackendMember;
+  }>('/api/members', memberData);
+
+  return {
+    data: response.data.data,
+  };
+}
 
 export async function getMemberById(
   memberId: string,

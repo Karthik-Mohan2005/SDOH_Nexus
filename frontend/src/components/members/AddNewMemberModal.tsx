@@ -4,7 +4,7 @@ import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { Select } from '../common/Select';
 import { AlertCircle } from 'lucide-react';
-
+import type { Community } from '../../types/community';
 export interface NewMemberFormData {
   age: number;
   gender: 'Male' | 'Female' | 'Other';
@@ -23,12 +23,7 @@ interface AddNewMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: NewMemberFormData) => Promise<void>;
-  communities?: Array<{
-  id?: string;
-  name?: string;
-  state?: string;
-  State?: string;
-}>;
+  communities?: Community[];
   isLoading?: boolean;
 }
 
@@ -68,7 +63,7 @@ export const AddNewMemberModal: React.FC<AddNewMemberModalProps> = ({
     urgentCareVisits: 0,
     standardFips: '01005',
     primaryCondition: 'Diabetes',
-    communityId: communities[0]?.id || '',
+    communityId: communities[0]?.communityId || '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -127,7 +122,7 @@ export const AddNewMemberModal: React.FC<AddNewMemberModalProps> = ({
         urgentCareVisits: 0,
         standardFips: '01005',
         primaryCondition: 'Diabetes',
-        communityId: communities[0]?.id || '',
+        communityId: communities[0]?.communityId || '',
       });
       onClose();
     } catch (error) {
@@ -148,16 +143,10 @@ export const AddNewMemberModal: React.FC<AddNewMemberModalProps> = ({
     }
   };
 
-  const communityOptions = communities
-  .filter(
-    (c): c is typeof c & { id: string; name: string } =>
-      Boolean(c.id && c.name),
-  )
-  .map(c => ({
-    label: c.name,
-    value: c.id,
-  }));
-
+const communityOptions = communities.map(c => ({
+  label: c.name,
+  value: c.communityId,
+}));
   const conditionOptions = CONDITIONS.map(c => ({
     label: c,
     value: c,
