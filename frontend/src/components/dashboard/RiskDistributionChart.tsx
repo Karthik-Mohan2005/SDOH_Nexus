@@ -13,6 +13,7 @@ import { getRiskDistribution } from '../../services/analyticsService';
 export interface RiskDistributionData {
   name: string;
   value: number;
+  count: number;
   color: string;
 }
 
@@ -22,28 +23,38 @@ const COLORS: Record<string, string> = {
   High: '#dc2626',
 };
 
-export const RiskDistributionChart: React.FC<{
+interface RiskDistributionChartProps {
   onFilterRisk?: (level: string) => void;
-}> = ({ onFilterRisk }) => {
+}
+
+export const RiskDistributionChart: React.FC<RiskDistributionChartProps> = ({
+  onFilterRisk,
+}) => {
   const [data, setData] = useState<RiskDistributionData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const loadRiskDistribution = async () => {
       try {
+        setIsLoading(true);
+        setError('');
+
         const response = await getRiskDistribution();
 
-        setData(
-          response.map(item => ({
-            name: item.category,
-            value: item.count,
-            color: COLORS[item.category] ?? '#64748b',
-          })),
-        );
-      } catch (error) {
-        console.error('Failed to load risk distribution:', error);
+        const mappedData = response.map(item => ({
+          name: item.category,
+          value: item.percentage,
+          count: item.count,
+          color: COLORS[item.category] ?? '#64748b',
+        }));
+
+        setData(mappedData);
+      } catch (err) {
+        console.error('Failed to load risk distribution:', err);
+        setError('Unable to load risk distribution');
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -53,20 +64,32 @@ export const RiskDistributionChart: React.FC<{
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle>Risk Distribution</CardTitle>
-        <span className="text-xs text-slate-500 font-normal">
-          Population breakdown
-        </span>
+        <div>
+          <CardTitle>SDOH Risk Distribution</CardTitle>
+          <p className="text-xs text-slate-500 font-normal mt-0.5">
+            Current population breakdown
+          </p>
+        </div>
       </CardHeader>
 
       <div className="flex-1 min-h-[240px] w-full">
-        {loading ? (
-          <div className="h-full flex items-center justify-center text-sm text-slate-500">
-            Loading risk data...
+        {isLoading ? (
+          <div className="h-full min-h-[240px] flex items-center justify-center">
+            <div className="text-sm text-slate-500">
+              Loading risk distribution...
+            </div>
+          </div>
+        ) : error ? (
+          <div className="h-full min-h-[240px] flex items-center justify-center">
+            <div className="text-sm text-red-500">
+              {error}
+            </div>
           </div>
         ) : data.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-sm text-slate-500">
-            No risk data available
+          <div className="h-full min-h-[240px] flex items-center justify-center">
+            <div className="text-sm text-slate-500">
+              No risk distribution data available.
+            </div>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -74,19 +97,15 @@ export const RiskDistributionChart: React.FC<{
               <Pie
                 data={data}
                 cx="50%"
-                cy="50%"
+                cy="45%"
                 innerRadius={60}
                 outerRadius={85}
                 paddingAngle={3}
                 dataKey="value"
+                nameKey="name"
                 onClick={entry => {
                   if (onFilterRisk && entry?.name) {
-                    const level =
-                      entry.name === 'Medium'
-                        ? 'moderate'
-                        : entry.name.toLowerCase();
-
-                    onFilterRisk(level);
+                    onFilterRisk(String(entry.name).toLowerCase());
                   }
                 }}
                 className="cursor-pointer"
@@ -100,17 +119,21 @@ export const RiskDistributionChart: React.FC<{
               </Pie>
 
               <RechartsTooltip
-                formatter={(value: any) => [
-                  `${Number(value ?? 0).toLocaleString()} members`,
-                  'Population',
-                ]}
-                contentStyle={{
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  fontSize: '12px',
-                }}
-              />
+  formatter={(value, _name, props) => {
+    const numericValue = Number(value ?? 0);
+    const count = Number(props?.payload?.count ?? 0);
 
+    return [
+      `${numericValue.toFixed(1)}% (${count.toLocaleString()} members)`,
+      'Population',
+    ];
+  }}
+  contentStyle={{
+    borderRadius: '8px',
+    border: '1px solid #e2e8f0',
+    fontSize: '12px',
+  }}
+/>
               <Legend
                 layout="horizontal"
                 verticalAlign="bottom"
