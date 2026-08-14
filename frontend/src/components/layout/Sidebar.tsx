@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Users,
   MapPin,
-  BarChart3,
   HeartPulse,
   Database,
   Settings,
@@ -25,7 +24,6 @@ const MAIN_NAV_ITEMS: NavItemDef[] = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Members', path: '/members', icon: Users },
   { label: 'Community Map', path: '/communities', icon: MapPin },
-  { label: 'Analytics', path: '/analytics', icon: BarChart3 },
   { label: 'Interventions', path: '/interventions', icon: HeartPulse },
   { label: 'Data Integration', path: '/integrations', icon: Database, badge: '5 Sources' },
 ];

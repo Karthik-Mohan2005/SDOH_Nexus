@@ -9,7 +9,6 @@ import { DashboardPage } from './pages/DashboardPage';
 import { MembersPage } from './pages/MembersPage';
 import { MemberProfilePage } from './pages/MemberProfilePage';
 import { CommunityMapPage } from './pages/CommunityMapPage';
-import { AnalyticsPage } from './pages/AnalyticsPage';
 import { InterventionsPage } from './pages/InterventionsPage';
 import { IntegrationsPage } from './pages/IntegrationsPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -31,7 +30,6 @@ function AuthenticatedApp() {
           <Route path="/members" element={<MembersPage />} />
           <Route path="/members/:memberId" element={<MemberProfilePage />} />
           <Route path="/communities" element={<CommunityMapPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/interventions" element={<InterventionsPage />} />
           <Route path="/integrations" element={<IntegrationsPage />} />
           <Route path="/settings" element={<SettingsPage />} />

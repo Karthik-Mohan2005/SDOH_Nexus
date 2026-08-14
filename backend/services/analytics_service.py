@@ -1,3 +1,4 @@
+import pandas as pd
 from services.data_service import load_patient_data
 def get_dashboard_summary():
     df = load_patient_data()
@@ -98,16 +99,21 @@ def get_sdoh_factor_analysis():
         if column not in df.columns:
             continue
 
-        value = df[column].mean()
+        values = df[column]
+
+        # Remove invalid / missing negative values
+        if name == "foodInsecurity":
+            values = values[values >= 0]
+
+        value = values.mean()
 
         results.append({
             "factor": name,
             "sourceColumn": column,
-            "average": float(value)
+            "average": float(value) if not pd.isna(value) else 0
         })
 
     return results
-
 
 def get_risk_by_state():
 

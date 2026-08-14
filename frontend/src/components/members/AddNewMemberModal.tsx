@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
@@ -65,6 +65,20 @@ export const AddNewMemberModal: React.FC<AddNewMemberModalProps> = ({
     primaryCondition: 'Diabetes',
     communityId: communities[0]?.communityId || '',
   });
+  useEffect(() => {
+  if (
+    communities.length > 0 &&
+    !formData.communityId
+  ) {
+    const firstCommunity = communities[0];
+
+    setFormData(prev => ({
+      ...prev,
+      communityId: String(firstCommunity.communityId),
+      standardFips: String(firstCommunity.fips),
+    }));
+  }
+}, [communities, formData.communityId]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string>('');
@@ -120,7 +134,7 @@ export const AddNewMemberModal: React.FC<AddNewMemberModalProps> = ({
         diastolicBp: 80,
         inpatientVisits: 0,
         urgentCareVisits: 0,
-        standardFips: '01005',
+        standardFips: communities[0]?.fips || '',
         primaryCondition: 'Diabetes',
         communityId: communities[0]?.communityId || '',
       });
@@ -303,17 +317,22 @@ const communityOptions = communities.map(c => ({
 
           {/* FIPS Code */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              FIPS Code *
-            </label>
-            <Input
-              type="text"
-              value={formData.standardFips}
-              onChange={(e) => handleInputChange('standardFips', e.target.value)}
-              error={errors.standardFips}
-              placeholder="e.g., 01005"
-            />
-          </div>
+  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+    FIPS Code
+  </label>
+
+  <Input
+    type="text"
+    value={formData.standardFips}
+    readOnly
+    disabled
+    placeholder="Select a community"
+  />
+
+  <p className="text-xs text-slate-400 mt-1">
+    Automatically assigned from the selected community.
+  </p>
+</div>
 
           {/* Primary Condition */}
           <div>
@@ -335,13 +354,38 @@ const communityOptions = communities.map(c => ({
               Community *
             </label>
             <Select
-              options={communityOptions}
-              value={formData.communityId}
-              onChange={(event) =>
-                  handleInputChange('communityId', event.target.value)
-                }
-              error={errors.communityId}
-            />
+  options={communityOptions}
+  value={formData.communityId}
+  onChange={(event) => {
+    const selectedCommunity = communities.find(
+      community =>
+        String(community.communityId) === event.target.value
+    );
+
+    setFormData(prev => ({
+      ...prev,
+      communityId: event.target.value,
+      standardFips: selectedCommunity
+        ? String(selectedCommunity.fips)
+        : '',
+    }));
+
+    if (errors.communityId) {
+      setErrors(prev => ({
+        ...prev,
+        communityId: '',
+      }));
+    }
+
+    if (errors.standardFips) {
+      setErrors(prev => ({
+        ...prev,
+        standardFips: '',
+      }));
+    }
+  }}
+  error={errors.communityId}
+/>
           </div>
         </div>
       </form>

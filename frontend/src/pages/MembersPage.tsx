@@ -5,7 +5,7 @@ import { MemberFilters } from '../components/members/MemberFilters';
 import { MemberTable } from '../components/members/MemberTable';
 import { AddNewMemberModal, type NewMemberFormData } from '../components/members/AddNewMemberModal';
 import { useMembers } from '../hooks/useMembers';
-import { createMember } from '../services/memberService';
+import {createMember, getAllMembersForExport,} from '../services/memberService';
 import { SkeletonTableRow } from '../components/common/Skeleton';
 import { EmptyState } from '../components/common/EmptyState';
 import { ErrorState } from '../components/common/ErrorState';
@@ -63,10 +63,22 @@ useEffect(() => {
     });
   };
 
-  const handleExportCSV = () => {
-    const csvData = membersToCSVData(members as unknown as Record<string, unknown>[]);
-    exportToCSV(csvData, 'SDOH_Nexus_Members_Directory');
-  };
+  const handleExportCSV = async () => {
+  try {
+    const allMembers = await getAllMembersForExport();
+
+    const csvData = membersToCSVData(
+      allMembers as unknown as Record<string, unknown>[]
+    );
+
+    exportToCSV(
+      csvData,
+      'SDOH_Nexus_Members_Directory'
+    );
+  } catch (error) {
+    console.error('Failed to export all members:', error);
+  }
+};
 
   const handleAddMember = async (formData: NewMemberFormData) => {
   setIsAddingMember(true);

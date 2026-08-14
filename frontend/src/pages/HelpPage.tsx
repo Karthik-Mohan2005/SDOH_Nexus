@@ -11,7 +11,6 @@ import {
   Cpu,
   HeartPulse,
   MapPin,
-  BarChart3,
   ExternalLink,
   ChevronRight,
   Activity,
@@ -132,7 +131,6 @@ export const HelpPage: React.FC = () => {
             {[
               { title: 'Member Profiles', desc: 'View per-member SDOH risk scores, clinical utilization, and actionable intervention recommendations.', icon: HeartPulse, path: '/members', color: 'bg-blue-50 text-blue-600' },
               { title: 'Community Risk Map', desc: 'Interactive Leaflet map showing geographic SDOH vulnerability, community resources, and risk distribution.', icon: MapPin, path: '/communities', color: 'bg-emerald-50 text-emerald-600' },
-              { title: 'SDOH Analytics', desc: 'Correlation scatter plots, domain radar charts, and automated insights revealing SDOH-outcome relationships.', icon: BarChart3, path: '/analytics', color: 'bg-purple-50 text-purple-600' },
               { title: 'Intervention Center', desc: 'Prioritized, assignable care coordination recommendations targeting specific SDOH barriers by member or community.', icon: ShieldCheck, path: '/interventions', color: 'bg-amber-50 text-amber-600' },
               { title: 'Data Integration Hub', desc: 'Pipeline status monitoring for all 5 connected SDOH datasets, with match rates and enrichment metrics.', icon: Database, path: '/integrations', color: 'bg-cyan-50 text-cyan-600' },
               { title: 'Risk Intelligence Engine', desc: 'Composite SDOH Risk Score (0-100) explaining risk factors with source attribution and outcome predictions.', icon: Cpu, path: '/members', color: 'bg-indigo-50 text-indigo-600' },
@@ -254,7 +252,7 @@ export const HelpPage: React.FC = () => {
                 <div className="text-slate-400">{'[Risk Intelligence Engine]'}</div>
                 <div className="pl-4 text-emerald-300">{'↓ Composite SDOH Score (0-100)'}</div>
                 <div className="text-slate-400">{'[SDOH Nexus React Frontend]'}</div>
-                <div className="pl-4 text-pink-300">{'↓ Dashboard / Members / Map / Analytics / Interventions'}</div>
+                <div className="pl-4 text-pink-300">{'↓ Dashboard / Members / Map / Interventions'}</div>
               </div>
             </div>
           </Card>

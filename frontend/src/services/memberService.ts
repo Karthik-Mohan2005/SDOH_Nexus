@@ -301,6 +301,7 @@ function applyClientFilters(
   return filtered;
 }
 
+
 export async function getMembers(
   options: GetMembersOptions = {},
 ): Promise<GetMembersResponse> {
@@ -309,6 +310,7 @@ export async function getMembers(
     pageSize = 10,
     filters,
   } = options;
+  
 
   const response = await api.get<MembersApiResponse>('/api/members', {
     params: {
@@ -348,6 +350,13 @@ export async function getMembers(
     },
   };
 }
+export async function getAllMembersForExport(): Promise<Member[]> {
+  const response = await api.get<MembersApiResponse>('/api/members');
+
+  const mappedMembers = response.data.data.map(mapBackendMember);
+
+  return mappedMembers;
+}
 export async function createMember(
   memberData: {
     age: number;
@@ -363,15 +372,27 @@ export async function createMember(
     communityId: string;
   },
 ): Promise<ApiResponse<BackendMember>> {
-  const response = await api.post<{
-    success: boolean;
-    message: string;
-    data: BackendMember;
-  }>('/api/members', memberData);
+  try {
+    const response = await api.post<{
+      success: boolean;
+      message: string;
+      data: BackendMember;
+    }>('/api/members', memberData);
 
-  return {
-    data: response.data.data,
-  };
+    return {
+      data: response.data.data,
+    };
+  } catch (error: any) {
+    console.error('CREATE MEMBER ERROR:', error);
+    console.error('BACKEND RESPONSE:', error?.response?.data);
+
+    throw new Error(
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      error?.message ||
+      'Failed to create member'
+    );
+  }
 }
 
 export async function getMemberById(

@@ -11,7 +11,6 @@ const ROUTE_LABELS: Record<string, string> = {
   dashboard: 'Dashboard',
   members: 'Members',
   communities: 'Community Risk Map',
-  analytics: 'SDOH Analytics',
   interventions: 'Intervention Center',
   integrations: 'Data Integration',
   settings: 'Settings',
